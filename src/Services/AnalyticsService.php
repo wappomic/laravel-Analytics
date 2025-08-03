@@ -1,0 +1,120 @@
+<?php
+
+namespace Wappomic\Analytics\Services;
+
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Queue;
+use Wappomic\Analytics\Jobs\SendAnalyticsJob;
+
+class AnalyticsService
+{
+    protected array $config;
+    protected ApiClient $apiClient;
+    protected AnonymizationService $anonymizationService;
+
+    public function __construct(array $config)
+    {
+        $this->config = $config;
+        $this->apiClient = new ApiClient($config);
+        $this->anonymizationService = new AnonymizationService($config);
+    }
+
+    public function track(array $data): void
+    {
+        if (!$this->isEnabled()) {
+            return;
+        }
+
+        $processedData = $this->processTrackingData($data);
+        
+        if ($this->config['queue_enabled'] ?? true) {
+            $this->queueData($processedData);
+        } else {
+            $this->sendToApi($processedData);
+        }
+    }
+
+    public function sendToApi(array $data): bool
+    {
+        return $this->apiClient->send($data);
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->config['enabled'] ?? true;
+    }
+
+    public function isConfigured(): bool
+    {
+        return $this->apiClient->isConfigured();
+    }
+
+    public function validateConfig(): array
+    {
+        return $this->apiClient->validateConfig();
+    }
+
+    public function testConnection(): bool
+    {
+        return $this->apiClient->testConnection();
+    }
+
+    protected function processTrackingData(array $data): array
+    {
+        $timestamp = $this->anonymizationService->roundTimestamp(now());
+        
+        return [
+            'timestamp' => $timestamp->toISOString(),
+            'url' => $this->cleanUrl($data['url'] ?? ''),
+            'referrer' => $this->cleanReferrer($data['referrer'] ?? null),
+            'anonymized_ip' => $this->anonymizationService->anonymizeIp($data['ip'] ?? ''),
+            'browser' => $this->anonymizationService->getBrowserFamily($data['user_agent'] ?? ''),
+            'device' => $this->anonymizationService->getDeviceType($data['user_agent'] ?? ''),
+            'country' => $this->anonymizationService->getCountryCode($data['ip'] ?? ''),
+            'custom_data' => $data['custom_data'] ?? null,
+        ];
+    }
+
+    protected function queueData(array $data): void
+    {
+        Queue::connection($this->config['queue_connection'] ?? 'default')
+            ->pushOn(
+                $this->config['queue_name'] ?? 'analytics',
+                new SendAnalyticsJob($data)
+            );
+    }
+
+    protected function cleanUrl(string $url): string
+    {
+        if (empty($url)) {
+            return '/';
+        }
+
+        $parsed = parse_url($url);
+        
+        $cleanUrl = $parsed['path'] ?? '/';
+        
+        // Include query parameters if configured
+        if (($this->config['track_query_strings'] ?? false) && isset($parsed['query'])) {
+            $cleanUrl .= '?' . $parsed['query'];
+        }
+
+        return $cleanUrl;
+    }
+
+    protected function cleanReferrer(?string $referrer): ?string
+    {
+        if (!($this->config['track_referrers'] ?? true) || empty($referrer)) {
+            return null;
+        }
+
+        $parsed = parse_url($referrer);
+        
+        if (!isset($parsed['host'])) {
+            return null;
+        }
+
+        // Return only the domain, not the full URL for privacy
+        return $parsed['scheme'] . '://' . $parsed['host'];
+    }
+}

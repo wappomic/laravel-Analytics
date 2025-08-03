@@ -1,0 +1,62 @@
+{
+    "name": "wappomic/laravel-analytics",
+    "description": "DSGVO-konformes, cookie-freies Analytics Package für Laravel - API-basiert ohne Datenbank",
+    "keywords": [
+        "laravel",
+        "analytics",
+        "dsgvo",
+        "gdpr",
+        "privacy",
+        "cookieless",
+        "server-side"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Wappomic",
+            "email": "info@wappomic.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^12.0",
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.0",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wappomic\\Analytics\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Wappomic\\Analytics\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Wappomic\\Analytics\\AnalyticsServiceProvider"
+            ],
+            "aliases": {
+                "Analytics": "Wappomic\\Analytics\\Facades\\Analytics"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "pest",
+        "test-coverage": "pest --coverage"
+    }
+}
