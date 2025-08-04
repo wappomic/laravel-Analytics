@@ -77,10 +77,6 @@ class AnonymizationService
 
     public function getCountryCode(string $anonymizedIp): ?string
     {
-        if ($this->config['geo_precision'] === 'none') {
-            return null;
-        }
-
         try {
             $geoData = $this->getGeoData($anonymizedIp);
             return $geoData['country_code'] ?? null;
@@ -89,26 +85,8 @@ class AnonymizationService
         }
     }
 
-    public function getRegion(string $anonymizedIp): ?string
-    {
-        if (!in_array($this->config['geo_precision'] ?? 'region', ['region', 'city'])) {
-            return null;
-        }
-
-        try {
-            $geoData = $this->getGeoData($anonymizedIp);
-            return $geoData['region'] ?? null;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
     public function roundTimestamp(Carbon $timestamp): Carbon
     {
-        if (!($this->config['round_timestamps_to_hour'] ?? true)) {
-            return $timestamp;
-        }
-
         return $timestamp->startOfHour();
     }
 
@@ -120,14 +98,8 @@ class AnonymizationService
             return '0.0.0.0';
         }
 
-        $mask = $this->config['ip_anonymization_mask'] ?? '255.255.255.0';
-        $maskParts = explode('.', $mask);
-
-        for ($i = 0; $i < 4; $i++) {
-            if (isset($maskParts[$i]) && $maskParts[$i] === '0') {
-                $parts[$i] = '0';
-            }
-        }
+        // Always use 255.255.255.0 mask (anonymize last octet)
+        $parts[3] = '0';
 
         return implode('.', $parts);
     }
@@ -152,11 +124,11 @@ class AnonymizationService
         }
 
         if ($ip === '0.0.0.0' || $this->isPrivateIp($ip)) {
-            return $cache[$ip] = ['country_code' => null, 'region' => null];
+            return $cache[$ip] = ['country_code' => null];
         }
 
         try {
-            $response = Http::timeout(5)->get("http://ip-api.com/json/{$ip}?fields=status,countryCode,regionName");
+            $response = Http::timeout(5)->get("http://ip-api.com/json/{$ip}?fields=status,countryCode");
             
             if ($response->successful()) {
                 $data = $response->json();
@@ -164,7 +136,6 @@ class AnonymizationService
                 if ($data['status'] === 'success') {
                     return $cache[$ip] = [
                         'country_code' => $data['countryCode'] ?? null,
-                        'region' => $data['regionName'] ?? null,
                     ];
                 }
             }
@@ -172,7 +143,7 @@ class AnonymizationService
             // Fallback: Return null values for geo data on API failure
         }
 
-        return $cache[$ip] = ['country_code' => null, 'region' => null];
+        return $cache[$ip] = ['country_code' => null];
     }
 
     protected function isPrivateIp(string $ip): bool

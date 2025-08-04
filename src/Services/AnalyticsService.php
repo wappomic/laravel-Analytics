@@ -63,7 +63,8 @@ class AnalyticsService
     {
         $timestamp = $this->anonymizationService->roundTimestamp(now());
         
-        return [
+        $payload = [
+            'api_key' => $this->config['api_key'],
             'timestamp' => $timestamp->toISOString(),
             'url' => $this->cleanUrl($data['url'] ?? ''),
             'referrer' => $this->cleanReferrer($data['referrer'] ?? null),
@@ -73,6 +74,13 @@ class AnalyticsService
             'country' => $this->anonymizationService->getCountryCode($data['ip'] ?? ''),
             'custom_data' => $data['custom_data'] ?? null,
         ];
+
+        // Add app_name if configured (useful for multi-app setups)
+        if (!empty($this->config['app_name'])) {
+            $payload['app_name'] = $this->config['app_name'];
+        }
+
+        return $payload;
     }
 
     protected function queueData(array $data): void
@@ -92,19 +100,13 @@ class AnalyticsService
 
         $parsed = parse_url($url);
         
-        $cleanUrl = $parsed['path'] ?? '/';
-        
-        // Include query parameters if configured
-        if (($this->config['track_query_strings'] ?? false) && isset($parsed['query'])) {
-            $cleanUrl .= '?' . $parsed['query'];
-        }
-
-        return $cleanUrl;
+        // Only return path, no query strings for privacy
+        return $parsed['path'] ?? '/';
     }
 
     protected function cleanReferrer(?string $referrer): ?string
     {
-        if (!($this->config['track_referrers'] ?? true) || empty($referrer)) {
+        if (empty($referrer)) {
             return null;
         }
 

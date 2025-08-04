@@ -27,11 +27,8 @@ class ApiClient
         }
 
         try {
-            $response = Http::timeout($this->config['api_timeout'] ?? 10)
-                ->retry(
-                    $this->config['retry_attempts'] ?? 3,
-                    $this->config['retry_delay'] ?? 1000
-                )
+            $response = Http::timeout(10)
+                ->retry(3, 1000)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->config['api_key'],
                     'Content-Type' => 'application/json',
@@ -96,9 +93,6 @@ class ApiClient
             $errors[] = 'ANALYTICS_API_KEY environment variable is required';
         }
 
-        if (isset($this->config['api_timeout']) && (!is_numeric($this->config['api_timeout']) || $this->config['api_timeout'] <= 0)) {
-            $errors[] = 'ANALYTICS_API_TIMEOUT must be a positive number';
-        }
 
         return $errors;
     }

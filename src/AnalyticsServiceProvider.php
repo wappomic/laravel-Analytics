@@ -48,9 +48,7 @@ class AnalyticsServiceProvider extends ServiceProvider
         
         $router->aliasMiddleware('analytics.tracking', TrackingMiddleware::class);
         
-        if (config('analytics.auto_track', true)) {
-            $router->pushMiddlewareToGroup('web', TrackingMiddleware::class);
-        }
+        $router->pushMiddlewareToGroup('web', TrackingMiddleware::class);
     }
 
     public function provides(): array

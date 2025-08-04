@@ -73,7 +73,25 @@ class TrackingMiddleware
 
     protected function isExcludedPath(string $path): bool
     {
-        $excludedPaths = config('analytics.excluded_paths', []);
+        $excludedPaths = [
+            '/admin*',
+            '/api*',
+            '/health*',
+            '/robots.txt',
+            '/sitemap.xml',
+            '*.json',
+            '*.xml',
+            '*.css',
+            '*.js',
+            '*.ico',
+            '*.png',
+            '*.jpg',
+            '*.jpeg',
+            '*.gif',
+            '*.svg',
+            '*.woff*',
+            '*.ttf',
+        ];
 
         foreach ($excludedPaths as $pattern) {
             if (fnmatch($pattern, $path)) {
@@ -90,7 +108,18 @@ class TrackingMiddleware
             return false;
         }
 
-        $excludedAgents = config('analytics.excluded_user_agents', []);
+        $excludedAgents = [
+            '*bot*',
+            '*crawler*',
+            '*spider*',
+            '*scraper*',
+            'Googlebot',
+            'Bingbot',
+            'YandexBot',
+            'facebookexternalhit',
+            'Twitterbot',
+            'WhatsApp',
+        ];
 
         foreach ($excludedAgents as $pattern) {
             if (fnmatch(strtolower($pattern), strtolower($userAgent))) {

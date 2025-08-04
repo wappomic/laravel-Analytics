@@ -5,17 +5,14 @@ namespace Wappomic\Analytics\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static void track(string $url, array $data = [])
- * @method static void trackEvent(string $event, array $data = [])
+ * @method static void track(array $data)
+ * @method static bool sendToApi(array $data)
  * @method static bool isEnabled()
- * @method static void optOut(string $ip)
- * @method static bool isOptedOut(string $ip)
- * @method static array getVisits(array $filters = [])
- * @method static array getTopPages(int $limit = 10)
- * @method static array getCountryStats()
- * @method static array getDailyVisits(int $days = 30)
+ * @method static bool isConfigured()
+ * @method static array validateConfig()
+ * @method static bool testConnection()
  *
- * @see \Wappomic\Analytics\AnalyticsPackage
+ * @see \Wappomic\Analytics\Services\AnalyticsService
  */
 class Analytics extends Facade
 {
