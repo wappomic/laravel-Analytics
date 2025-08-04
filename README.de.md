@@ -3,20 +3,20 @@
 [![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
 [![de](https://img.shields.io/badge/lang-de-green.svg)](README.de.md)
 
-⚠️ **BETA VERSION** - Production ready, but API may change
+⚠️ **BETA VERSION** - Produktionsreif, aber API kann sich ändern
 
-**Cookie-free, GDPR-compliant analytics package for Laravel**
+**Cookie-freies, DSGVO-konformes Analytics Package für Laravel**
 
-Collects anonymized website data and sends it to your own API. No cookies, no banner - just install and go.
+Sammelt anonymisierte Website-Daten und sendet sie an Ihre eigene API. Keine Cookies, kein Banner - einfach installieren und loslegen.
 
 ## 🎯 Features
 
-- 🍪 **Cookie-free** - No consent required
-- 🔒 **GDPR-compliant** - Immediate anonymization of all data  
-- 🌐 **API-based** - Sends data to your own analytics API
-- ⚡ **Performance** - < 2ms overhead, asynchronous processing
-- 🎛️ **Multi-App Support** - One dashboard for multiple apps/websites
-- 🔧 **Plug & Play** - Automatic tracking after installation
+- 🍪 **Cookie-frei** - Keine Einwilligung erforderlich
+- 🔒 **DSGVO-konform** - Sofortige Anonymisierung aller Daten  
+- 🌐 **API-basiert** - Sendet Daten an Ihre eigene Analytics-API
+- ⚡ **Performance** - < 2ms Overhead, asynchrone Verarbeitung
+- 🎛️ **Multi-App Support** - Ein Dashboard für mehrere Apps/Websites
+- 🔧 **Plug & Play** - Automatisches Tracking nach Installation
 
 ## 📦 Installation
 
@@ -25,10 +25,10 @@ composer require wappomic/laravel-analytics
 php artisan vendor:publish --tag=analytics-config
 ```
 
-### .env Configuration
+### .env Konfiguration
 
 ```env
-# REQUIRED
+# ERFORDERLICH
 ANALYTICS_API_URL=https://your-dashboard.com/api/analytics
 ANALYTICS_API_KEY=your-unique-app-key-12345
 
@@ -38,11 +38,11 @@ ANALYTICS_ENABLED=true
 ANALYTICS_QUEUE_ENABLED=true
 ```
 
-That's it! 🎉 The package now automatically tracks all web requests.
+Das war's! 🎉 Das Package trackt jetzt automatisch alle Web-Requests.
 
-## 📊 Data Format
+## 📊 Daten-Format
 
-Your API receives POST requests with this JSON payload:
+Ihre API erhält POST-Requests mit diesem JSON-Payload:
 
 ```json
 {
@@ -59,9 +59,9 @@ Your API receives POST requests with this JSON payload:
 }
 ```
 
-### 🔑 Multi-App Setup (Recommended)
+### 🔑 Multi-App Setup (Empfohlen)
 
-**One dashboard for all your apps:**
+**Ein Dashboard für alle Ihre Apps:**
 
 ```env
 # App 1: Online Shop
@@ -77,11 +77,11 @@ ANALYTICS_API_KEY=landing-key-ghi789
 ANALYTICS_APP_NAME="Product Landing"
 ```
 
-All apps send to the same `ANALYTICS_API_URL` but with different `api_key` - perfect data separation.
+Alle Apps senden an die gleiche `ANALYTICS_API_URL`, aber mit unterschiedlichen `api_key` - so können Sie die Daten perfekt zuordnen.
 
-## 🛠️ Analytics Dashboard Implementation
+## 🛠️ Analytics-Dashboard Implementation
 
-### 1. Create API Endpoint
+### 1. API-Endpoint erstellen
 
 ```php
 // routes/api.php
@@ -115,14 +115,14 @@ class AnalyticsController extends Controller
             'custom_data' => 'nullable|array',
         ]);
 
-        // Find app by API key
+        // App anhand API-Key identifizieren
         $app = App::where('api_key', $data['api_key'])->first();
         
         if (!$app) {
             return response()->json(['error' => 'Invalid API key'], 401);
         }
 
-        // Store analytics data
+        // Analytics-Daten speichern
         AnalyticsData::create([
             'app_id' => $app->id,
             'timestamp' => $data['timestamp'],
@@ -135,7 +135,7 @@ class AnalyticsController extends Controller
             'custom_data' => $data['custom_data'],
         ]);
 
-        // Update app name on first request (optional)
+        // App-Name beim ersten Request aktualisieren (optional)
         if ($data['app_name'] && $app->name !== $data['app_name']) {
             $app->update(['name' => $data['app_name']]);
         }
@@ -145,7 +145,7 @@ class AnalyticsController extends Controller
 }
 ```
 
-### 2. Database Schema
+### 2. Datenbank-Schema
 
 ```php
 // Migration: create_apps_table.php
@@ -234,7 +234,7 @@ class AnalyticsData extends Model
 }
 ```
 
-### 4. Dashboard Controller
+### 4. Dashboard-Controller
 
 ```php
 // app/Http/Controllers/DashboardController.php
@@ -287,63 +287,63 @@ class DashboardController extends Controller
 }
 ```
 
-## 🔐 GDPR Compliance
+## 🔐 DSGVO-Konformität
 
-### ✅ Why no consent is required:
+### ✅ Warum keine Einwilligung erforderlich ist:
 
-- **No cookies** - Package sets no cookies
-- **Immediate anonymization** - IP becomes `192.168.1.0` 
-- **No user tracking** - No persistent user identification
-- **Data minimization** - Only necessary data
-- **Legitimate interest** - Art. 6 Para. 1 lit. f GDPR
+- **Keine Cookies** - Package setzt keine Cookies
+- **Sofortige Anonymisierung** - IP wird zu `192.168.1.0` 
+- **Keine Nutzer-Verfolgung** - Keine persistente Identifikation
+- **Datenminimierung** - Nur notwendige Daten
+- **Berechtigtes Interesse** - Art. 6 Abs. 1 lit. f DSGVO
 
-### 🛡️ Anonymization:
+### 🛡️ Anonymisierung:
 
-| Original | Anonymized |
+| Original | Anonymisiert |
 |----------|-------------|
 | `192.168.1.123` | `192.168.1.0` |
 | `Mozilla/5.0 Chrome/91.0...` | `Chrome` |
 | `2025-08-04 14:23:45` | `2025-08-04 14:00:00` |
-| `Munich, Bavaria` | `DE` |
+| `München, Bayern` | `DE` |
 
-## ⚙️ Advanced Usage
+## ⚙️ Erweiterte Nutzung
 
-### Manual Tracking
+### Manuelles Tracking
 
 ```php
 use Wappomic\Analytics\Facades\Analytics;
 
-// Track custom event
+// Custom Event tracken
 Analytics::track([
     'url' => '/newsletter-signup',
     'custom_data' => ['campaign' => 'summer-sale']
 ]);
 
-// Check status
+// Status prüfen
 if (Analytics::isEnabled() && Analytics::isConfigured()) {
-    // Analytics is running
+    // Analytics läuft
 }
 
-// Test API connection
+// API-Verbindung testen
 if (Analytics::testConnection()) {
-    echo "✅ API reachable";
+    echo "✅ API erreichbar";
 } else {
-    echo "❌ API problem - check config";
+    echo "❌ API-Problem - Config prüfen";
 }
 ```
 
-### Manual Middleware Control
+### Middleware manuell steuern
 
 ```php
 // routes/web.php
 
-// Automatic tracking for all routes (default)
+// Automatisches Tracking für alle Routes (Standard)
 Route::get('/', HomeController::class);
 
-// Disable tracking for specific routes
+// Tracking für bestimmte Routes deaktivieren
 Route::get('/admin', AdminController::class)->withoutMiddleware('analytics.tracking');
 
-// Track only specific routes
+// Tracking nur für bestimmte Routes
 Route::group(['middleware' => 'analytics.tracking'], function () {
     Route::get('/shop', ShopController::class);
     Route::get('/products', ProductController::class);
@@ -352,70 +352,70 @@ Route::group(['middleware' => 'analytics.tracking'], function () {
 
 ## 🚀 Performance & Monitoring
 
-- **Middleware overhead**: < 2ms
-- **Asynchronous**: Via Laravel Queues (recommended)
-- **Retry logic**: 3x retry on API failures
-- **Timeout**: 10 seconds
-- **Error handling**: Logs when `APP_DEBUG=true`
+- **Middleware-Overhead**: < 2ms
+- **Asynchron**: Über Laravel Queues (empfohlen)
+- **Retry-Logic**: 3x Wiederholung bei API-Fehlern
+- **Timeout**: 10 Sekunden
+- **Error-Handling**: Logs bei `APP_DEBUG=true`
 
 ## 🔧 Troubleshooting
 
-### No data received?
+### Keine Daten erhalten?
 
-1. **Check config**:
+1. **Config prüfen**:
 ```bash
 php artisan tinker
 >>> Analytics::validateConfig()
 >>> Analytics::testConnection()
 ```
 
-2. **Queue running?**:
+2. **Queue läuft?**:
 ```bash
 php artisan queue:work
-# Or temporarily disable:
+# Oder temporär deaktivieren:
 ANALYTICS_QUEUE_ENABLED=false
 ```
 
-3. **Check logs**:
+3. **Logs checken**:
 ```bash
 tail -f storage/logs/laravel.log
 ```
 
-### API Debugging
+### API-Debugging
 
 ```php
-// Your analytics API should return:
+// Ihre Analytics-API sollte zurückgeben:
 HTTP/1.1 200 OK
 Content-Type: application/json
 
 {"status": "success"}
 
-// On errors:
+// Bei Fehlern:
 HTTP/1.1 400 Bad Request
 {"error": "Invalid data", "details": [...]}
 ```
 
-## 📈 Next Steps
+## 📈 Nächste Schritte
 
-1. **Generate API keys** for your apps
-2. **Implement dashboard** with examples above
-3. **Add charts** (Chart.js, ApexCharts)
-4. **Real-time updates** with WebSockets
-5. **Export functions** (PDF, Excel)
+1. **API-Keys generieren** für Ihre Apps
+2. **Dashboard implementieren** mit den Beispielen oben
+3. **Charts hinzufügen** (Chart.js, ApexCharts)
+4. **Real-time Updates** mit WebSockets
+5. **Export-Funktionen** (PDF, Excel)
 
-## 📄 License
+## 📄 Lizenz
 
-MIT License - See [LICENSE](LICENSE) for details.
+MIT License - Siehe [LICENSE](LICENSE) für Details.
 
 ---
 
 **Happy Analytics! 🎉**  
-Feel free to create an issue on GitHub if you have questions.
+Bei Fragen gerne ein Issue auf GitHub erstellen.
 
 ---
 
-## 🇩🇪 Deutsche Version
+## 🇺🇸 English Version
 
-Die vollständige deutsche Dokumentation finden Sie in der [README.de.md](README.de.md) Datei.
+The complete English documentation can be found in the [README.md](README.md) file.
 
-*For the complete German documentation, please see [README.de.md](README.de.md).*
+*Die vollständige englische Dokumentation finden Sie in der [README.md](README.md) Datei.*
