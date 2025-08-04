@@ -1,6 +1,7 @@
 {
     "name": "wappomic/laravel-analytics",
-    "description": "DSGVO-konformes, cookie-freies Analytics Package für Laravel - API-basiert ohne Datenbank",
+    "version": "1.0.0-beta.1",
+    "description": "BETA - Cookie-free GDPR-compliant analytics package for Laravel - API-based without database",
     "keywords": [
         "laravel",
         "analytics",
@@ -8,7 +9,8 @@
         "gdpr",
         "privacy",
         "cookieless",
-        "server-side"
+        "server-side",
+        "beta"
     ],
     "type": "library",
     "license": "MIT",

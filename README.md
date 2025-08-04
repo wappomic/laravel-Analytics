@@ -1,5 +1,7 @@
 # Wappomic Laravel Analytics v1
 
+⚠️ **BETA VERSION** - Production ready, but API may change
+
 **Cookie-freies, DSGVO-konformes Analytics Package für Laravel**
 
 Sammelt anonymisierte Website-Daten und sendet sie an Ihre eigene API. Keine Cookies, kein Banner - einfach installieren und loslegen.
