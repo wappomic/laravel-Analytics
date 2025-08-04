@@ -1,6 +1,5 @@
 {
     "name": "wappomic/laravel-analytics",
-    "version": "1.0.0-beta.1",
     "description": "BETA - Cookie-free GDPR-compliant analytics package for Laravel - API-based without database",
     "keywords": [
         "laravel",
