@@ -126,6 +126,9 @@ class SessionTrackingService
     protected function calculateDuration(string $createdAt): int
     {
         $created = \Carbon\Carbon::parse($createdAt);
-        return now()->diffInMinutes($created);
+        $duration = $created->diffInMinutes(now());
+        
+        // Ensure duration is never negative (can happen due to timezone issues)
+        return max(0, $duration);
     }
 }

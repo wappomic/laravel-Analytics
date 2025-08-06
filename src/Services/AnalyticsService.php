@@ -80,7 +80,7 @@ class AnalyticsService
             $payload['session_hash'] = $data['session_data']['session_hash'];
             $payload['is_new_session'] = $data['session_data']['is_new_session'];
             $payload['pageview_count'] = $data['session_data']['pageview_count'];
-            $payload['session_duration'] = $data['session_data']['session_duration'];
+            $payload['session_duration'] = max(0, $data['session_data']['session_duration'] ?? 0);
         }
 
         // Add app_name if configured (useful for multi-app setups)
