@@ -17,6 +17,7 @@ Sammelt anonymisierte Website-Daten und sendet sie an Ihre eigene API. Keine Coo
 - ⚡ **Performance** - < 2ms Overhead, asynchrone Verarbeitung
 - 🎛️ **Multi-App Support** - Ein Dashboard für mehrere Apps/Websites
 - 🔧 **Plug & Play** - Automatisches Tracking nach Installation
+- 🔄 **Session Tracking** - Cookie-freie Unique-Visitor-Erkennung
 
 ## 📦 Installation
 
@@ -36,6 +37,12 @@ ANALYTICS_API_KEY=your-unique-app-key-12345
 ANALYTICS_APP_NAME="My Laravel Shop"
 ANALYTICS_ENABLED=true
 ANALYTICS_QUEUE_ENABLED=true
+ANALYTICS_QUEUE_CONNECTION=redis
+ANALYTICS_QUEUE_NAME=analytics
+ANALYTICS_SESSION_TRACKING_ENABLED=true
+ANALYTICS_SESSION_TTL_HOURS=24
+ANALYTICS_QUEUE_CONNECTION=redis
+ANALYTICS_QUEUE_NAME=analytics
 ```
 
 Das war's! 🎉 Das Package trackt jetzt automatisch alle Web-Requests.
@@ -55,6 +62,10 @@ Ihre API erhält POST-Requests mit diesem JSON-Payload:
   "browser": "Chrome", 
   "device": "desktop",
   "country": "DE",
+  "session_hash": "abc123def456789abcdef123456789abc",
+  "is_new_session": true,
+  "pageview_count": 1,
+  "session_duration": 0,
   "custom_data": null
 }
 ```
@@ -296,6 +307,7 @@ class DashboardController extends Controller
 - **Keine Nutzer-Verfolgung** - Keine persistente Identifikation
 - **Datenminimierung** - Nur notwendige Daten
 - **Berechtigtes Interesse** - Art. 6 Abs. 1 lit. f DSGVO
+- **Session-Hashing** - Anonyme täglich wechselnde Session-Hashes
 
 ### 🛡️ Anonymisierung:
 
@@ -305,6 +317,7 @@ class DashboardController extends Controller
 | `Mozilla/5.0 Chrome/91.0...` | `Chrome` |
 | `2025-08-04 14:23:45` | `2025-08-04 14:00:00` |
 | `München, Bayern` | `DE` |
+| Session ID | `abc123def456...` (täglich neuer Hash) |
 
 ## ⚙️ Erweiterte Nutzung
 
@@ -374,6 +387,36 @@ php artisan tinker
 php artisan queue:work
 # Oder temporär deaktivieren:
 ANALYTICS_QUEUE_ENABLED=false
+```
+
+### Queue-Probleme mit Redis?
+
+Wenn Sie Redis verwenden und die Queue nicht funktioniert:
+
+1. **Redis-Verbindung prüfen**:
+```bash
+php artisan tinker
+>>> Redis::ping()  # Sollte "PONG" zurückgeben
+```
+
+2. **Redis-Queue explizit konfigurieren**:
+```env
+ANALYTICS_QUEUE_CONNECTION=redis
+ANALYTICS_QUEUE_NAME=analytics
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+3. **Failed Jobs prüfen**:
+```bash
+php artisan queue:failed
+php artisan queue:retry all  # Failed Jobs wiederholen
+```
+
+4. **Queue in Echtzeit überwachen**:
+```bash
+php artisan queue:work --verbose --tries=3 --timeout=30
 ```
 
 3. **Logs checken**:

@@ -17,6 +17,7 @@ Collects anonymized website data and sends it to your own API. No cookies, no ba
 - ⚡ **Performance** - < 2ms overhead, asynchronous processing
 - 🎛️ **Multi-App Support** - One dashboard for multiple apps/websites
 - 🔧 **Plug & Play** - Automatic tracking after installation
+- 🔄 **Session Tracking** - Cookie-free unique visitor identification
 
 ## 📦 Installation
 
@@ -36,6 +37,10 @@ ANALYTICS_API_KEY=your-unique-app-key-12345
 ANALYTICS_APP_NAME="My Laravel Shop"
 ANALYTICS_ENABLED=true
 ANALYTICS_QUEUE_ENABLED=true
+ANALYTICS_QUEUE_CONNECTION=redis
+ANALYTICS_QUEUE_NAME=analytics
+ANALYTICS_SESSION_TRACKING_ENABLED=true
+ANALYTICS_SESSION_TTL_HOURS=24
 ```
 
 That's it! 🎉 The package now automatically tracks all web requests.
@@ -55,6 +60,10 @@ Your API receives POST requests with this JSON payload:
   "browser": "Chrome", 
   "device": "desktop",
   "country": "DE",
+  "session_hash": "abc123def456789abcdef123456789abc",
+  "is_new_session": true,
+  "pageview_count": 1,
+  "session_duration": 0,
   "custom_data": null
 }
 ```
@@ -112,6 +121,10 @@ class AnalyticsController extends Controller
             'browser' => 'nullable|string',
             'device' => 'nullable|string',
             'country' => 'nullable|string|size:2',
+            'session_hash' => 'nullable|string',
+            'is_new_session' => 'nullable|boolean',
+            'pageview_count' => 'nullable|integer',
+            'session_duration' => 'nullable|integer',
             'custom_data' => 'nullable|array',
         ]);
 
@@ -132,6 +145,10 @@ class AnalyticsController extends Controller
             'browser' => $data['browser'],
             'device' => $data['device'],
             'country' => $data['country'],
+            'session_hash' => $data['session_hash'] ?? null,
+            'is_new_session' => $data['is_new_session'] ?? false,
+            'pageview_count' => $data['pageview_count'] ?? 1,
+            'session_duration' => $data['session_duration'] ?? 0,
             'custom_data' => $data['custom_data'],
         ]);
 
@@ -168,11 +185,17 @@ Schema::create('analytics_data', function (Blueprint $table) {
     $table->string('browser')->nullable();
     $table->string('device')->nullable();
     $table->string('country', 2)->nullable();
+    $table->string('session_hash', 64)->nullable();
+    $table->boolean('is_new_session')->default(false);
+    $table->integer('pageview_count')->default(1);
+    $table->integer('session_duration')->default(0);
     $table->json('custom_data')->nullable();
     $table->timestamps();
     
     $table->index(['app_id', 'timestamp']);
     $table->index(['app_id', 'url']);
+    $table->index(['app_id', 'session_hash']);
+    $table->index(['app_id', 'is_new_session']);
 });
 ```
 
@@ -219,11 +242,16 @@ class AnalyticsData extends Model
 {
     protected $fillable = [
         'app_id', 'timestamp', 'url', 'referrer', 
-        'anonymized_ip', 'browser', 'device', 'country', 'custom_data'
+        'anonymized_ip', 'browser', 'device', 'country', 
+        'session_hash', 'is_new_session', 'pageview_count', 'session_duration',
+        'custom_data'
     ];
     
     protected $casts = [
         'timestamp' => 'datetime',
+        'is_new_session' => 'boolean',
+        'pageview_count' => 'integer',
+        'session_duration' => 'integer',
         'custom_data' => 'array',
     ];
     
@@ -256,30 +284,33 @@ class DashboardController extends Controller
     public function app(App $app)
     {
         $stats = [
-            'total_visits' => $app->analyticsData()->count(),
-            'today_visits' => $app->analyticsData()->whereDate('timestamp', today())->count(),
+            'total_pageviews' => $app->analyticsData()->count(),
+            'unique_visitors' => $app->analyticsData()->where('is_new_session', true)->count(),
+            'today_pageviews' => $app->analyticsData()->whereDate('timestamp', today())->count(),
+            'today_visitors' => $app->analyticsData()
+                ->whereDate('timestamp', today())
+                ->where('is_new_session', true)
+                ->count(),
             'top_pages' => $app->analyticsData()
                 ->select('url')
-                ->selectRaw('COUNT(*) as visits')
+                ->selectRaw('COUNT(*) as pageviews')
+                ->selectRaw('COUNT(CASE WHEN is_new_session = 1 THEN 1 END) as unique_visitors')
                 ->groupBy('url')
-                ->orderByDesc('visits')
+                ->orderByDesc('pageviews')
                 ->limit(10)
                 ->get(),
             'countries' => $app->analyticsData()
                 ->select('country')
-                ->selectRaw('COUNT(*) as visits')
+                ->selectRaw('COUNT(CASE WHEN is_new_session = 1 THEN 1 END) as unique_visitors')
+                ->selectRaw('COUNT(*) as pageviews')
                 ->whereNotNull('country')
                 ->groupBy('country')
-                ->orderByDesc('visits')
+                ->orderByDesc('unique_visitors')
                 ->limit(10)
                 ->get(),
-            'browsers' => $app->analyticsData()
-                ->select('browser')  
-                ->selectRaw('COUNT(*) as visits')
-                ->whereNotNull('browser')
-                ->groupBy('browser')
-                ->orderByDesc('visits')
-                ->get(),
+            'avg_session_duration' => $app->analyticsData()
+                ->where('session_duration', '>', 0)
+                ->avg('session_duration'),
         ];
         
         return view('dashboard.app', compact('app', 'stats'));
@@ -296,6 +327,7 @@ class DashboardController extends Controller
 - **No user tracking** - No persistent user identification
 - **Data minimization** - Only necessary data
 - **Legitimate interest** - Art. 6 Para. 1 lit. f GDPR
+- **Session hashing** - Anonymous daily session hashes, not traceable
 
 ### 🛡️ Anonymization:
 
@@ -305,6 +337,7 @@ class DashboardController extends Controller
 | `Mozilla/5.0 Chrome/91.0...` | `Chrome` |
 | `2025-08-04 14:23:45` | `2025-08-04 14:00:00` |
 | `Munich, Bavaria` | `DE` |
+| Session ID | `abc123def456...` (daily hash) |
 
 ## ⚙️ Advanced Usage
 
@@ -374,6 +407,36 @@ php artisan tinker
 php artisan queue:work
 # Or temporarily disable:
 ANALYTICS_QUEUE_ENABLED=false
+```
+
+### Queue problems with Redis?
+
+If you're using Redis and the queue isn't working:
+
+1. **Check Redis connection**:
+```bash
+php artisan tinker
+>>> Redis::ping()  # Should return "PONG"
+```
+
+2. **Configure Redis queue explicitly**:
+```env
+ANALYTICS_QUEUE_CONNECTION=redis
+ANALYTICS_QUEUE_NAME=analytics
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+3. **Check failed jobs**:
+```bash
+php artisan queue:failed
+php artisan queue:retry all  # Retry failed jobs
+```
+
+4. **Monitor queue in real-time**:
+```bash
+php artisan queue:work --verbose --tries=3 --timeout=30
 ```
 
 3. **Check logs**:

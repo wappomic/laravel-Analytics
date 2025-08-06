@@ -75,6 +75,14 @@ class AnalyticsService
             'custom_data' => $data['custom_data'] ?? null,
         ];
 
+        // Add session tracking data if available
+        if (isset($data['session_data'])) {
+            $payload['session_hash'] = $data['session_data']['session_hash'];
+            $payload['is_new_session'] = $data['session_data']['is_new_session'];
+            $payload['pageview_count'] = $data['session_data']['pageview_count'];
+            $payload['session_duration'] = $data['session_data']['session_duration'];
+        }
+
         // Add app_name if configured (useful for multi-app setups)
         if (!empty($this->config['app_name'])) {
             $payload['app_name'] = $this->config['app_name'];
@@ -85,11 +93,9 @@ class AnalyticsService
 
     protected function queueData(array $data): void
     {
-        Queue::connection($this->config['queue_connection'] ?? 'default')
-            ->pushOn(
-                $this->config['queue_name'] ?? 'analytics',
-                new SendAnalyticsJob($data)
-            );
+        SendAnalyticsJob::dispatch($data)
+            ->onConnection($this->config['queue_connection'] ?? 'redis')
+            ->onQueue($this->config['queue_name'] ?? 'analytics');
     }
 
     protected function cleanUrl(string $url): string

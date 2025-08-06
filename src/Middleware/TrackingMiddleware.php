@@ -7,14 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Wappomic\Analytics\Services\AnalyticsService;
+use Wappomic\Analytics\Services\SessionTrackingService;
 
 class TrackingMiddleware
 {
     protected AnalyticsService $analyticsService;
+    protected SessionTrackingService $sessionTrackingService;
 
     public function __construct(AnalyticsService $analyticsService)
     {
         $this->analyticsService = $analyticsService;
+        $this->sessionTrackingService = new SessionTrackingService(config('analytics'));
     }
 
     public function handle(Request $request, Closure $next): SymfonyResponse
@@ -137,12 +140,25 @@ class TrackingMiddleware
 
     protected function prepareTrackingData(Request $request): array
     {
-        return [
+        $trackingData = [
             'url' => $request->fullUrl(),
             'referrer' => $request->header('referer'),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'method' => $request->method(),
         ];
+
+        // Add session tracking data if enabled
+        if ($this->sessionTrackingService->isSessionTrackingEnabled()) {
+            $sessionHash = $this->sessionTrackingService->generateSessionHash(
+                $request->ip(),
+                $request->userAgent()
+            );
+            
+            $sessionData = $this->sessionTrackingService->trackSession($sessionHash);
+            $trackingData['session_data'] = $sessionData;
+        }
+
+        return $trackingData;
     }
 }

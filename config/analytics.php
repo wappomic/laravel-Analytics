@@ -47,4 +47,19 @@ return [
     |
     */
     'queue_enabled' => env('ANALYTICS_QUEUE_ENABLED', true),
+    'queue_connection' => env('ANALYTICS_QUEUE_CONNECTION', 'redis'),
+    'queue_name' => env('ANALYTICS_QUEUE_NAME', 'analytics'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Tracking Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure session-based visitor tracking for unique visitors.
+    | Uses anonymous hash to identify same user across multiple page views.
+    | No cookies required - GDPR compliant.
+    |
+    */
+    'session_tracking_enabled' => env('ANALYTICS_SESSION_TRACKING_ENABLED', true),
+    'session_ttl_hours' => env('ANALYTICS_SESSION_TTL_HOURS', 24),
 ];

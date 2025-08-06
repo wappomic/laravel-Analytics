@@ -22,8 +22,6 @@ class SendAnalyticsJob implements ShouldQueue
     public function __construct(array $data)
     {
         $this->data = $data;
-        
-        $this->onQueue(config('analytics.queue_name', 'analytics'));
     }
 
     public function handle(): void
@@ -44,6 +42,9 @@ class SendAnalyticsJob implements ShouldQueue
             logger('Analytics API job failed', [
                 'data' => $this->data,
                 'exception' => $exception->getMessage(),
+                'queue' => $this->queue ?? 'unknown',
+                'connection' => $this->connection ?? 'unknown',
+                'attempts' => $this->attempts(),
             ]);
         }
     }
