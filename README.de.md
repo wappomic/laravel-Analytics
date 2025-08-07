@@ -47,6 +47,114 @@ ANALYTICS_QUEUE_NAME=analytics
 
 Das war's! 🎉 Das Package trackt jetzt automatisch alle Web-Requests.
 
+## 🚫 Ausgeschlossene Routen Konfiguration
+
+Standardmäßig werden bestimmte Routen automatisch vom Tracking ausgeschlossen (Admin-Seiten, APIs, statische Dateien, etc.). Sie können diese Liste anpassen oder Ausschlüsse komplett deaktivieren.
+
+### Standard Ausgeschlossene Routen
+
+```php
+// config/analytics.php
+'excluded_routes' => [
+    '/admin*',
+    '/api*',
+    '/broadcasting*',  // 🎯 Löst Laravel Broadcasting Auth-Probleme
+    '/health*',
+    '/robots.txt',
+    '/sitemap.xml',
+    '*.json',
+    '*.xml',
+    '*.css',
+    '*.js',
+    '*.ico',
+    '*.png',
+    '*.jpg',
+    '*.jpeg',
+    '*.gif',
+    '*.svg',
+    '*.woff*',
+    '*.ttf',
+],
+```
+
+### Anpassungs-Beispiele
+
+```php
+// Alles tracken (keine Ausschlüsse)
+'excluded_routes' => [],
+
+// Nur bestimmte Routen ausschließen
+'excluded_routes' => ['/admin*', '/broadcasting*'],
+
+// Eigene Routen zu den Standards hinzufügen
+'excluded_routes' => [
+    '/admin*',
+    '/api*',
+    '/broadcasting*',
+    '/health*',
+    '/robots.txt',
+    '/sitemap.xml',
+    '*.json',
+    '*.xml',
+    '*.css',
+    '*.js',
+    '*.ico',
+    '*.png',
+    '*.jpg',
+    '*.jpeg',
+    '*.gif',
+    '*.svg',
+    '*.woff*',
+    '*.ttf',
+    '/mein-privater-bereich*',  // Ihre eigenen Ausschlüsse
+    '/interne-api/*',
+    '*.pdf',
+],
+```
+
+### Wildcard-Patterns
+
+Die ausgeschlossenen Routen unterstützen Wildcard-Patterns mit `fnmatch()`:
+
+| Pattern | Entspricht | Beispiele |
+|---------|------------|----------|
+| `/admin*` | Routen die mit `/admin` beginnen | `/admin`, `/admin/users`, `/admin/dashboard/settings` |
+| `*.json` | Routen die mit `.json` enden | `/data.json`, `/api/users.json` |
+| `/api/*` | Routen unter `/api/` | `/api/users`, `/api/v1/posts` |
+| `*broadcasting*` | Routen die `broadcasting` enthalten | `/broadcasting/auth`, `/laravel/broadcasting/auth` |
+
+### Häufige Anwendungsfälle
+
+**Laravel Broadcasting (WebSocket Auth)**:
+```php
+'excluded_routes' => ['/broadcasting*'],
+// Verhindert Tracking von '/broadcasting/auth' Routen
+```
+
+**SPA-Anwendungen**:
+```php
+'excluded_routes' => ['/api*', '*.json'],
+// Nur Seitenaufrufe tracken, keine API-Calls
+```
+
+**Alles tracken**:
+```php
+'excluded_routes' => [],
+// Keine automatischen Ausschlüsse - alle Routen tracken
+```
+
+### Kombination mit Route-Middleware
+
+Sie haben zwei Optionen um Routen auszuschließen:
+
+```php
+// Option 1: Globale Config (empfohlen)
+'excluded_routes' => ['/admin*', '/broadcasting*'],
+
+// Option 2: Pro Route
+Route::get('/admin', AdminController::class)->withoutMiddleware('analytics.tracking');
+```
+
 ## 📊 Daten-Format
 
 Ihre API erhält POST-Requests mit diesem JSON-Payload:

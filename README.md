@@ -45,6 +45,114 @@ ANALYTICS_SESSION_TTL_HOURS=24
 
 That's it! 🎉 The package now automatically tracks all web requests.
 
+## 🚫 Excluded Routes Configuration
+
+By default, certain routes are automatically excluded from tracking (admin pages, APIs, static files, etc.). You can customize this list or disable exclusions entirely.
+
+### Default Excluded Routes
+
+```php
+// config/analytics.php
+'excluded_routes' => [
+    '/admin*',
+    '/api*',
+    '/broadcasting*',  // 🎯 Solves Laravel Broadcasting auth issues
+    '/health*',
+    '/robots.txt',
+    '/sitemap.xml',
+    '*.json',
+    '*.xml',
+    '*.css',
+    '*.js',
+    '*.ico',
+    '*.png',
+    '*.jpg',
+    '*.jpeg',
+    '*.gif',
+    '*.svg',
+    '*.woff*',
+    '*.ttf',
+],
+```
+
+### Customization Examples
+
+```php
+// Track everything (no exclusions)
+'excluded_routes' => [],
+
+// Only exclude specific routes
+'excluded_routes' => ['/admin*', '/broadcasting*'],
+
+// Add your custom routes to defaults
+'excluded_routes' => [
+    '/admin*',
+    '/api*',
+    '/broadcasting*',
+    '/health*',
+    '/robots.txt',
+    '/sitemap.xml',
+    '*.json',
+    '*.xml',
+    '*.css',
+    '*.js',
+    '*.ico',
+    '*.png',
+    '*.jpg',
+    '*.jpeg',
+    '*.gif',
+    '*.svg',
+    '*.woff*',
+    '*.ttf',
+    '/my-private-section*',  // Your custom exclusions
+    '/internal-api/*',
+    '*.pdf',
+],
+```
+
+### Wildcard Patterns
+
+The excluded routes support wildcard patterns using `fnmatch()`:
+
+| Pattern | Matches | Examples |
+|---------|---------|----------|
+| `/admin*` | Routes starting with `/admin` | `/admin`, `/admin/users`, `/admin/dashboard/settings` |
+| `*.json` | Routes ending with `.json` | `/data.json`, `/api/users.json` |
+| `/api/*` | Routes under `/api/` | `/api/users`, `/api/v1/posts` |
+| `*broadcasting*` | Routes containing `broadcasting` | `/broadcasting/auth`, `/laravel/broadcasting/auth` |
+
+### Common Use Cases
+
+**Laravel Broadcasting (WebSocket Auth)**:
+```php
+'excluded_routes' => ['/broadcasting*'],
+// Prevents tracking of '/broadcasting/auth' routes
+```
+
+**SPA Applications**:
+```php
+'excluded_routes' => ['/api*', '*.json'],
+// Only track page views, not API calls
+```
+
+**Track Everything**:
+```php
+'excluded_routes' => [],
+// No automatic exclusions - track all routes
+```
+
+### Combined with Route Middleware
+
+You have two options to exclude routes:
+
+```php
+// Option 1: Global config (recommended)
+'excluded_routes' => ['/admin*', '/broadcasting*'],
+
+// Option 2: Per-route basis
+Route::get('/admin', AdminController::class)->withoutMiddleware('analytics.tracking');
+```
+
 ## 📊 Data Format
 
 Your API receives POST requests with this JSON payload:

@@ -76,25 +76,7 @@ class TrackingMiddleware
 
     protected function isExcludedPath(string $path): bool
     {
-        $excludedPaths = [
-            '/admin*',
-            '/api*',
-            '/health*',
-            '/robots.txt',
-            '/sitemap.xml',
-            '*.json',
-            '*.xml',
-            '*.css',
-            '*.js',
-            '*.ico',
-            '*.png',
-            '*.jpg',
-            '*.jpeg',
-            '*.gif',
-            '*.svg',
-            '*.woff*',
-            '*.ttf',
-        ];
+        $excludedPaths = config('analytics.excluded_routes', []);
 
         foreach ($excludedPaths as $pattern) {
             if (fnmatch($pattern, $path)) {

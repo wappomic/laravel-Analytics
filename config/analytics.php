@@ -62,4 +62,42 @@ return [
     */
     'session_tracking_enabled' => env('ANALYTICS_SESSION_TRACKING_ENABLED', true),
     'session_ttl_hours' => env('ANALYTICS_SESSION_TTL_HOURS', 24),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Excluded Routes Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Routes that should NOT be tracked by the analytics middleware.
+    | Supports wildcard patterns using '*'. 
+    | 
+    | Examples:
+    | - '/admin*' matches '/admin', '/admin/users', '/admin/dashboard'
+    | - '*.json' matches any route ending with .json
+    | - '/api/*' matches any route starting with /api/
+    |
+    | You can customize this list or set it to an empty array [] to track all routes.
+    | Individual routes can still be excluded using ->withoutMiddleware('analytics.tracking')
+    |
+    */
+    'excluded_routes' => [
+        '/admin*',
+        '/api*',
+        '/broadcasting*',
+        '/health*',
+        '/robots.txt',
+        '/sitemap.xml',
+        '*.json',
+        '*.xml',
+        '*.css',
+        '*.js',
+        '*.ico',
+        '*.png',
+        '*.jpg',
+        '*.jpeg',
+        '*.gif',
+        '*.svg',
+        '*.woff*',
+        '*.ttf',
+    ],
 ];
