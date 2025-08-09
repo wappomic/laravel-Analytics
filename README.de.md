@@ -50,11 +50,11 @@ Das war's! 🎉 Das Package trackt jetzt automatisch alle Web-Requests.
 
 Alle wichtigen Änderungen in diesem Projekt werden in der [CHANGELOG.md](CHANGELOG.md) dokumentiert.
 
-### 🆕 Aktuelle Version: v1.0.2
-- 🐛 **Critical Fix:** Session-Dauer-Berechnung korrigiert (war immer 0)  
-- ✅ **Test Suite:** 7 umfassende Tests für Session-Tracking hinzugefügt
-- 🛠️ **Robustheit:** Verbesserte Middleware und Fehlerbehandlung
-- 📚 **Dokumentation:** Vollständige CHANGELOG.md mit Versionshistorie
+### 🆕 Aktuelle Version: v1.0.3
+- 🚀 **Präzisions-Upgrade:** Session-Dauer jetzt in Sekunden (war auf Minuten gerundet)
+- 📊 **Daten-Wiederherstellung:** Sessions unter 60s gehen nicht mehr verloren (war 0, jetzt präzise)
+- ✅ **Erweiterte Tests:** 5 neue Präzisions-Tests + 7 bestehende Session-Tests
+- 🎯 **Bessere Analytics:** Genauere Session-Dauer-Daten für API-Consumer
 
 [→ Vollständigen Changelog anzeigen](CHANGELOG.md)
 

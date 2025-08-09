@@ -129,17 +129,15 @@ class SessionTrackingService
             $created = \Carbon\Carbon::parse($createdAt);
             $now = now();
             
-            // Calculate absolute duration in minutes
-            // diffInMinutes() returns negative values for past timestamps,
-            // but we want the absolute time difference
-            $duration = abs($now->diffInMinutes($created));
+            // Calculate absolute duration in seconds for better precision
+            // Previously used diffInMinutes() which caused precision loss for sessions < 60s
+            $duration = abs($now->diffInSeconds($created));
             
             // Additional safety: ensure the created timestamp is not in the future
             // If somehow created_at is in the future, return 0
             if ($created->isFuture()) {
                 return 0;
             }
-            
             
             return (int) $duration;
         } catch (\Exception $e) {
