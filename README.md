@@ -44,6 +44,18 @@ ANALYTICS_SESSION_TTL_HOURS=24
 
 That's it! 🎉 The package now automatically tracks all web requests.
 
+## 📝 Changelog
+
+Alle wichtigen Änderungen in diesem Projekt werden in der [CHANGELOG.md](CHANGELOG.md) dokumentiert.
+
+### 🆕 Aktuelle Version: v1.0.2
+- 🐛 **Critical Fix:** Session-Dauer-Berechnung korrigiert (war immer 0)  
+- ✅ **Test Suite:** 7 umfassende Tests für Session-Tracking hinzugefügt
+- 🛠️ **Robustheit:** Verbesserte Middleware und Fehlerbehandlung
+- 📚 **Dokumentation:** Vollständige CHANGELOG.md mit Versionshistorie
+
+[→ Vollständigen Changelog anzeigen](CHANGELOG.md)
+
 ## 🚫 Excluded Routes Configuration
 
 By default, certain routes are automatically excluded from tracking (admin pages, APIs, static files, etc.). You can customize this list or disable exclusions entirely.

@@ -1,0 +1,198 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### 🔄 Coming Soon
+- Future improvements and features will be documented here
+
+---
+
+## [1.0.2] - 2025-08-09
+
+### 🐛 Fixed
+- **Critical:** Session duration calculation returning 0 for all sessions due to negative `diffInMinutes()` values
+- **Middleware:** Added config fallback `config('analytics', [])` to prevent null pointer exceptions during testing
+- **Type Safety:** Improved error handling with fallback values for debug mode
+
+### ✅ Added  
+- **Comprehensive Test Suite:** New `SessionTrackingServiceTest.php` with 7 detailed test scenarios:
+  - ✅ New session creation (duration = 0)
+  - ✅ Existing session duration calculation  
+  - ✅ User scenario reproduction test with exact cache data
+  - ✅ Microsecond precision timestamp handling
+  - ✅ Timezone compatibility across different formats
+  - ✅ Negative duration protection tests
+  - ✅ Future timestamp edge case handling
+- **Documentation:** Complete `CHANGELOG.md` with full version history from beta.1 to stable
+- **README Integration:** Changelog links and current version highlights in both EN/DE versions
+
+### 🛠️ Changed
+- **Session Duration Logic:** Now uses `abs($now->diffInMinutes($created))` instead of raw negative values
+- **Future Timestamp Protection:** Added `$created->isFuture()` safety check
+- **Error Logging:** Enhanced debug logging with better context information
+- **Type Consistency:** Explicit `(int)` casting for duration return values
+
+### 🔧 Technical Details
+**Root Cause:** `diffInMinutes()` returns negative values when `$created` timestamp is in the past (which is always the case for session tracking). The previous `max(0, $duration)` converted all negative values to 0.
+
+**Solution:** Using `abs()` wrapper ensures positive duration regardless of timestamp order, while maintaining all safety checks for edge cases.
+
+**Impact:** Fixes the core session tracking functionality - sessions now show correct durations instead of always 0.
+
+**Backward Compatibility:** ✅ Fully compatible - no breaking changes, automatic fix for existing installations
+
+---
+
+## [1.0.1] - 2025-08-09
+
+### 🐛 Fixed
+- **Session Duration Bug:** Corrected session duration calculation that was returning 0 for all sessions
+- **Timestamp Parsing:** Improved error handling for parsing failures in session tracking
+- **Negative Duration Protection:** Enhanced logic to handle edge cases where timestamps might cause negative durations
+
+### ✅ Added
+- Better error handling and logging for session duration calculations
+- Fallback protection for future timestamp edge cases
+
+### 🛠️ Changed
+- Session duration calculation now uses absolute time differences
+- Improved robustness of timestamp parsing with microsecond precision
+
+**Migration Notes:** This is a backward-compatible bug fix. No changes required to existing installations.
+
+---
+
+## [1.0.0] - 2025-08-09
+
+### 🎉 First Stable Release
+- **Production Ready:** Removed all beta labels and warnings
+- **Stable API:** All core features are now stable and production-tested
+
+### 🛠️ Changed
+- Removed beta version warnings from README files
+- Updated package metadata to remove "beta" keyword
+- Finalized documentation for production use
+
+### 📚 Documentation
+- Clean, production-ready README in English and German
+- Removed development warnings and beta disclaimers
+
+---
+
+## [1.0.0-beta.4] - 2025-08-09
+
+### ✅ Added
+- **Configurable Route Exclusions:** Routes can now be configured via `config/analytics.php`
+- **Flexible Wildcard Patterns:** Support for complex route exclusion patterns
+
+### 🐛 Fixed
+- **Session Duration:** Ensure session duration is never negative in payload calculations
+- **Route Filtering:** Improved route exclusion logic with better pattern matching
+
+### 🛠️ Changed
+- Switched from hardcoded excluded routes to configurable array in `config/analytics.php`
+- Enhanced route exclusion system with more flexible pattern matching
+
+---
+
+## [1.0.0-beta.3] - 2025-08-09
+
+### ✨ Added
+- **Session Tracking:** Cookie-free unique visitor identification system
+- **Session Duration:** Track visitor session length without cookies
+- **Configurable Session TTL:** Control how long sessions are tracked (default: 24 hours)
+- **Privacy-First:** Session hashes are anonymized and change daily
+
+### 🔧 Configuration
+```env
+ANALYTICS_SESSION_TRACKING_ENABLED=true
+ANALYTICS_SESSION_TTL_HOURS=24
+```
+
+### 📊 Payload Extensions
+- Added `session_hash`, `is_new_session`, `pageview_count`, and `session_duration` to analytics payload
+- Session data is included in all tracked requests when enabled
+
+---
+
+## [1.0.0-beta.2] - 2025-08-09
+
+### ✅ Added
+- **German Documentation:** Complete German README (`README.de.md`)
+- **Multi-language Support:** Language badges and links between EN/DE versions
+- **Improved Documentation:** Better examples and clearer installation instructions
+
+### 🌐 Internationalization
+- Deutsche Übersetzung der kompletten Dokumentation
+- Sprachauswahl-Badges in beiden README-Dateien
+- Kulturspezifische Beispiele und DSGVO-Hinweise
+
+---
+
+## [1.0.0-beta.1] - 2025-08-09
+
+### 🎯 Initial Package Release
+
+#### ✨ Core Features
+- **Cookie-free Analytics:** No consent banner required
+- **GDPR Compliant:** Immediate anonymization of all data
+- **API-based Architecture:** Send data to your own analytics API
+- **Performance Optimized:** < 2ms middleware overhead
+- **Queue Support:** Asynchronous processing with Redis/Database queues
+
+#### 🔒 Privacy Features
+- **IP Anonymization:** IPv4 (192.168.1.0) and IPv6 (2001:db8::) support
+- **User Agent Cleaning:** Only browser family (Chrome, Firefox, etc.)
+- **Timestamp Rounding:** Round to nearest hour for privacy
+- **No Local Storage:** Data sent directly to API, no database required
+
+#### 🛠️ Technical Features
+- **Automatic Route Exclusion:** Skip admin, API, static files automatically
+- **User Agent Filtering:** Exclude bots, crawlers, scrapers
+- **AJAX Request Filtering:** Skip AJAX/JSON requests
+- **Flexible Configuration:** Comprehensive `.env` and config options
+
+#### 📦 Installation
+```bash
+composer require wappomic/laravel-analytics
+php artisan vendor:publish --tag=analytics-config
+```
+
+#### 🔧 Configuration Options
+- API URL and API Key (required)
+- App name for multi-app setups
+- Queue connection and queue name
+- Route exclusions and filtering options
+
+#### 🚀 Zero Configuration Required
+Works out of the box with just API URL and API Key - automatic tracking starts immediately.
+
+---
+
+## Version Numbering
+
+This project follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** version when you make incompatible API changes
+- **MINOR** version when you add functionality in a backwards compatible manner  
+- **PATCH** version when you make backwards compatible bug fixes
+
+## Support
+
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/wappomic/laravel-analytics/issues)
+- 💡 **Feature Requests:** [GitHub Discussions](https://github.com/wappomic/laravel-analytics/discussions)
+- 📧 **Contact:** info@wappomic.com
+
+[Unreleased]: https://github.com/wappomic/laravel-analytics/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/wappomic/laravel-analytics/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/wappomic/laravel-analytics/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/wappomic/laravel-analytics/compare/v1.0.0-beta.4...v1.0.0
+[1.0.0-beta.4]: https://github.com/wappomic/laravel-analytics/compare/v1.0.0-beta.3...v1.0.0-beta.4
+[1.0.0-beta.3]: https://github.com/wappomic/laravel-analytics/compare/v1.0.0-beta.2...v1.0.0-beta.3
+[1.0.0-beta.2]: https://github.com/wappomic/laravel-analytics/compare/v1.0.0-beta.1...v1.0.0-beta.2
+[1.0.0-beta.1]: https://github.com/wappomic/laravel-analytics/releases/tag/v1.0.0-beta.1

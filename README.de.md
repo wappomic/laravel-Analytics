@@ -46,6 +46,18 @@ ANALYTICS_QUEUE_NAME=analytics
 
 Das war's! 🎉 Das Package trackt jetzt automatisch alle Web-Requests.
 
+## 📝 Changelog
+
+Alle wichtigen Änderungen in diesem Projekt werden in der [CHANGELOG.md](CHANGELOG.md) dokumentiert.
+
+### 🆕 Aktuelle Version: v1.0.2
+- 🐛 **Critical Fix:** Session-Dauer-Berechnung korrigiert (war immer 0)  
+- ✅ **Test Suite:** 7 umfassende Tests für Session-Tracking hinzugefügt
+- 🛠️ **Robustheit:** Verbesserte Middleware und Fehlerbehandlung
+- 📚 **Dokumentation:** Vollständige CHANGELOG.md mit Versionshistorie
+
+[→ Vollständigen Changelog anzeigen](CHANGELOG.md)
+
 ## 🚫 Ausgeschlossene Routen Konfiguration
 
 Standardmäßig werden bestimmte Routen automatisch vom Tracking ausgeschlossen (Admin-Seiten, APIs, statische Dateien, etc.). Sie können diese Liste anpassen oder Ausschlüsse komplett deaktivieren.

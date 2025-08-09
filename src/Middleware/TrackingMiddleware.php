@@ -17,7 +17,7 @@ class TrackingMiddleware
     public function __construct(AnalyticsService $analyticsService)
     {
         $this->analyticsService = $analyticsService;
-        $this->sessionTrackingService = new SessionTrackingService(config('analytics'));
+        $this->sessionTrackingService = new SessionTrackingService(config('analytics', []));
     }
 
     public function handle(Request $request, Closure $next): SymfonyResponse
