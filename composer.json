@@ -8,8 +8,7 @@
         "gdpr",
         "privacy",
         "cookieless",
-        "server-side",
-        "beta"
+        "server-side"
     ],
     "type": "library",
     "license": "MIT",
