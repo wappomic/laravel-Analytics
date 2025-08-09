@@ -84,6 +84,8 @@ return [
         '/admin*',
         '/api*',
         '/broadcasting*',
+        'broadcasting*',
+        '*broadcasting*',
         '/health*',
         '/robots.txt',
         '/sitemap.xml',
