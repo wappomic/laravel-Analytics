@@ -125,10 +125,24 @@ class SessionTrackingService
 
     protected function calculateDuration(string $createdAt): int
     {
-        $created = \Carbon\Carbon::parse($createdAt);
-        $duration = now()->diffInMinutes($created);
-        
-        // Ensure duration is never negative (can happen due to timezone issues)
-        return max(0, $duration);
+        try {
+            $created = \Carbon\Carbon::parse($createdAt);
+            $now = now();
+            
+            // Calculate duration in minutes
+            $duration = $now->diffInMinutes($created);
+            
+            // Ensure duration is never negative (can happen due to timezone issues)
+            return max(0, $duration);
+        } catch (\Exception $e) {
+            // Fallback: if parsing fails, return 0
+            if (config('app.debug')) {
+                logger('Session duration calculation failed', [
+                    'created_at' => $createdAt,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            return 0;
+        }
     }
 }
