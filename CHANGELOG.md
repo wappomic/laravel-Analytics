@@ -12,6 +12,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2025-08-10
+
+### 🚀 Production Hardening Release
+
+#### ✨ Added
+- **Request Deduplication:** SHA256-based request signatures with Redis cache prevent duplicate tracking (fixes 3x tracking issues in production)
+- **Production Request Filtering:** Automatic detection and filtering of load balancer health checks, internal requests, and proxy requests
+- **Verbose Logging Control:** New `ANALYTICS_VERBOSE_LOGGING` config option for optional detailed debugging logs
+- **Enhanced Error Diagnostics:** Detailed API failure logging with HTTP status codes, response bodies, and connection error details
+- **Job Configuration Pass-through:** Config is now passed directly to queue jobs, preventing config loading issues in queue worker context
+
+#### 🛠️ Improved  
+- **Tiered Logging Strategy:** Clean production logs (ERROR/INFO) with optional verbose debugging (DEBUG level)
+- **Queue Job Reliability:** Reduced retries from 3 to 2 attempts with exponential backoff (5s, 15s delays)
+- **API Client Error Handling:** Specific exception types distinguish connection failures from request failures
+- **Request Signature Algorithm:** Time-bucketed signatures (10-second windows) for efficient deduplication
+
+#### 🔧 Technical Improvements
+- **Request ID Correlation:** Unique request IDs track requests from middleware → queue job → API call
+- **Production Environment Detection:** Smart detection of internal IP ranges (RFC 1918), proxy headers, and health check user agents
+- **Config Validation in Jobs:** Pre-execution config validation prevents invalid API calls and provides clear error messages  
+- **Cache-based Deduplication:** 60-second TTL Redis cache prevents rapid duplicate request processing
+
+#### 📊 Monitoring Features
+- **Request Flow Tracking:** End-to-end request correlation with unique IDs for debugging production issues
+- **Performance Metrics:** Microsecond-precision timing for middleware execution and API call durations
+- **Production-Ready Logging:** Configurable log verbosity suitable for high-traffic production environments
+- **Health Check Filtering:** Prevents analytics pollution from load balancers (AWS ELB, Nginx, Apache, Laravel Forge)
+
+#### 🎯 Production Fixes
+- **Eliminates 3x Duplicate Tracking:** Root cause analysis and fix for production duplicate analytics entries
+- **Queue Worker Compatibility:** Improved reliability in multi-worker queue processing environments  
+- **Load Balancer Integration:** Seamless operation behind reverse proxies and load balancers
+- **Error Transparency:** Detailed API debugging information for rapid production issue resolution
+
+**Migration Notes:** Fully backward compatible. Add `ANALYTICS_VERBOSE_LOGGING=false` to `.env` for explicit log level control.
+
+---
+
 ## [1.0.3] - 2025-08-09
 
 ### 🚀 Improved
@@ -232,7 +271,8 @@ This project follows [Semantic Versioning](https://semver.org/):
 - 💡 **Feature Requests:** [GitHub Discussions](https://github.com/wappomic/laravel-analytics/discussions)
 - 📧 **Contact:** info@wappomic.com
 
-[Unreleased]: https://github.com/wappomic/laravel-analytics/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/wappomic/laravel-analytics/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/wappomic/laravel-analytics/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/wappomic/laravel-analytics/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/wappomic/laravel-analytics/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/wappomic/laravel-analytics/compare/v1.0.0...v1.0.1

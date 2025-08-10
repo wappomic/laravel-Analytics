@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Wappomic\Analytics\Services\AnalyticsService;
 use Wappomic\Analytics\Services\SessionTrackingService;
@@ -26,41 +27,47 @@ class TrackingMiddleware
         $requestId = uniqid('analytics_', true);
         $startTime = microtime(true);
         
-        // Enhanced logging for production debugging
-        logger('Analytics middleware triggered', [
-            'request_id' => $requestId,
-            'url' => $request->fullUrl(),
-            'method' => $request->method(),
-            'user_agent' => $request->userAgent(),
-            'ip' => $request->ip(),
-            'is_ajax' => $request->ajax(),
-            'wants_json' => $request->wantsJson(),
-            'headers' => [
-                'x-forwarded-for' => $request->header('x-forwarded-for'),
-                'x-real-ip' => $request->header('x-real-ip'),
-                'x-forwarded-proto' => $request->header('x-forwarded-proto'),
-                'cf-connecting-ip' => $request->header('cf-connecting-ip'),
-            ]
-        ]);
+        // Verbose logging for debugging (only when enabled)
+        if (config('analytics.verbose_logging', false)) {
+            Log::debug('Analytics middleware triggered', [
+                'request_id' => $requestId,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'user_agent' => $request->userAgent(),
+                'ip' => $request->ip(),
+                'is_ajax' => $request->ajax(),
+                'wants_json' => $request->wantsJson(),
+                'headers' => [
+                    'x-forwarded-for' => $request->header('x-forwarded-for'),
+                    'x-real-ip' => $request->header('x-real-ip'),
+                    'x-forwarded-proto' => $request->header('x-forwarded-proto'),
+                    'cf-connecting-ip' => $request->header('cf-connecting-ip'),
+                ]
+            ]);
+        }
 
         $response = $next($request);
 
         if ($this->shouldTrack($request, $response)) {
             try {
-                logger('Analytics tracking started', [
-                    'request_id' => $requestId,
-                    'url' => $request->fullUrl(),
-                    'response_status' => $response->getStatusCode(),
-                ]);
+                if (config('analytics.verbose_logging', false)) {
+                    Log::debug('Analytics tracking started', [
+                        'request_id' => $requestId,
+                        'url' => $request->fullUrl(),
+                        'response_status' => $response->getStatusCode(),
+                    ]);
+                }
                 
                 $this->analyticsService->track($this->prepareTrackingData($request, $requestId));
                 
-                logger('Analytics tracking completed', [
-                    'request_id' => $requestId,
-                    'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
-                ]);
+                if (config('analytics.verbose_logging', false)) {
+                    Log::debug('Analytics tracking completed', [
+                        'request_id' => $requestId,
+                        'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                    ]);
+                }
             } catch (\Exception $e) {
-                logger('Analytics tracking failed', [
+                Log::error('Analytics tracking failed', [
                     'request_id' => $requestId,
                     'url' => $request->fullUrl(),
                     'exception' => $e->getMessage(),
@@ -69,12 +76,14 @@ class TrackingMiddleware
                 ]);
             }
         } else {
-            logger('Analytics tracking skipped', [
-                'request_id' => $requestId,
-                'url' => $request->fullUrl(),
-                'reason' => $this->getSkipReason($request, $response),
-                'response_status' => $response->getStatusCode(),
-            ]);
+            if (config('analytics.verbose_logging', false)) {
+                Log::debug('Analytics tracking skipped', [
+                    'request_id' => $requestId,
+                    'url' => $request->fullUrl(),
+                    'reason' => $this->getSkipReason($request, $response),
+                    'response_status' => $response->getStatusCode(),
+                ]);
+            }
         }
 
         return $response;
@@ -269,11 +278,13 @@ class TrackingMiddleware
         
         // Check if we've already processed this request in the last 60 seconds
         if (Cache::has($cacheKey)) {
-            logger('Analytics duplicate request detected', [
-                'url' => $request->fullUrl(),
-                'signature' => $signature,
-                'cache_key' => $cacheKey,
-            ]);
+            if (config('analytics.verbose_logging', false)) {
+                Log::debug('Analytics duplicate request detected', [
+                    'url' => $request->fullUrl(),
+                    'signature' => $signature,
+                    'cache_key' => $cacheKey,
+                ]);
+            }
             return true;
         }
         

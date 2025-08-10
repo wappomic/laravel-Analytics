@@ -32,14 +32,16 @@ class SendAnalyticsJob implements ShouldQueue
     {
         $requestId = $this->data['request_id'] ?? uniqid('job_', true);
         
-        Log::info('Analytics job started', [
-            'request_id' => $requestId,
-            'attempt' => $this->attempts(),
-            'max_tries' => $this->tries,
-            'job_id' => $this->job->getJobId() ?? 'unknown',
-            'queue' => $this->queue ?? 'default',
-            'connection' => $this->connection ?? 'default',
-        ]);
+        if (config('analytics.verbose_logging', false)) {
+            Log::debug('Analytics job started', [
+                'request_id' => $requestId,
+                'attempt' => $this->attempts(),
+                'max_tries' => $this->tries,
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'queue' => $this->queue ?? 'default',
+                'connection' => $this->connection ?? 'default',
+            ]);
+        }
 
         // Validate config in job context
         if (!$this->isValidConfig()) {

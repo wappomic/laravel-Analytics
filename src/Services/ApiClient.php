@@ -18,12 +18,14 @@ class ApiClient
     {
         $requestId = $data['request_id'] ?? uniqid('api_', true);
         
-        Log::info('Analytics API request started', [
-            'request_id' => $requestId,
-            'api_url' => $this->config['api_url'] ?? 'not_set',
-            'has_api_key' => !empty($this->config['api_key']),
-            'data_size' => strlen(json_encode($data)),
-        ]);
+        if (config('analytics.verbose_logging', false)) {
+            Log::debug('Analytics API request started', [
+                'request_id' => $requestId,
+                'api_url' => $this->config['api_url'] ?? 'not_set',
+                'has_api_key' => !empty($this->config['api_key']),
+                'data_size' => strlen(json_encode($data)),
+            ]);
+        }
 
         if (!$this->isConfigured()) {
             Log::warning('Analytics API not configured. Skipping data send.', [
@@ -52,11 +54,10 @@ class ApiClient
             $duration = round((microtime(true) - $startTime) * 1000, 2);
 
             if ($response->successful()) {
+                // Keep success logging concise for production monitoring
                 Log::info('Analytics API request successful', [
                     'request_id' => $requestId,
                     'status' => $response->status(),
-                    'duration_ms' => $duration,
-                    'response_size' => strlen($response->body()),
                 ]);
                 return true;
             }

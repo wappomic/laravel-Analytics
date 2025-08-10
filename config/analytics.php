@@ -52,6 +52,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Verbose Logging
+    |--------------------------------------------------------------------------
+    |
+    | Enable detailed debug logging for troubleshooting.
+    | When disabled, only ERROR and INFO level logs are generated.
+    | Enable temporarily for debugging production issues.
+    |
+    */
+    'verbose_logging' => env('ANALYTICS_VERBOSE_LOGGING', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Session Tracking Configuration
     |--------------------------------------------------------------------------
     |

@@ -40,6 +40,7 @@ ANALYTICS_QUEUE_CONNECTION=redis
 ANALYTICS_QUEUE_NAME=analytics
 ANALYTICS_SESSION_TRACKING_ENABLED=true
 ANALYTICS_SESSION_TTL_HOURS=24
+ANALYTICS_VERBOSE_LOGGING=false
 ```
 
 That's it! 🎉 The package now automatically tracks all web requests.
@@ -48,11 +49,11 @@ That's it! 🎉 The package now automatically tracks all web requests.
 
 All notable changes to this project are documented in the [CHANGELOG.md](CHANGELOG.md).
 
-### 🆕 Current Version: v1.0.3
-- 🚀 **Precision Upgrade:** Session duration now in seconds (was rounded to minutes)
-- 📊 **Data Recovery:** Sessions under 60s no longer lost (was 0, now precise)
-- ✅ **Enhanced Testing:** 5 new precision tests + 7 existing session tests  
-- 🎯 **Better Analytics:** More accurate session duration data for API consumers
+### 🆕 Current Version: v1.0.4
+- 🛡️ **Production Hardening:** Request deduplication prevents 3x tracking issues
+- 📊 **Enhanced Diagnostics:** Detailed API error logging with HTTP response details
+- 🔧 **Smart Filtering:** Load balancer health check detection and internal request filtering
+- 📝 **Flexible Logging:** Optional verbose logging with `ANALYTICS_VERBOSE_LOGGING` config
 
 [→ View Full Changelog](CHANGELOG.md)
 
@@ -504,11 +505,33 @@ Route::group(['middleware' => 'analytics.tracking'], function () {
 
 ## 🚀 Performance & Monitoring
 
-- **Middleware overhead**: < 2ms
+- **Middleware overhead**: < 2ms  
 - **Asynchronous**: Via Laravel Queues (recommended)
-- **Retry logic**: 3x retry on API failures
+- **Request deduplication**: Prevents duplicate tracking with Redis cache
+- **Smart filtering**: Load balancer health checks and internal requests
+- **Retry logic**: 2x retry with exponential backoff (5s, 15s)
 - **Timeout**: 10 seconds
-- **Error handling**: Logs when `APP_DEBUG=true`
+- **Production logging**: Clean logs with optional verbose debugging
+
+### Verbose Logging
+
+For production debugging, enable detailed logging:
+
+```env
+ANALYTICS_VERBOSE_LOGGING=true
+```
+
+**Debug logs include:**
+- Request middleware triggers with headers
+- API request/response details  
+- Queue job processing steps
+- Duplicate request detection
+- Performance metrics
+
+**Production logs (always enabled):**
+- API failures with HTTP details
+- Configuration errors
+- Job completion status
 
 ## 🔧 Troubleshooting
 
@@ -521,12 +544,34 @@ php artisan tinker
 >>> Analytics::testConnection()
 ```
 
-2. **Queue running?**:
+2. **Enable verbose logging**:
+```env
+ANALYTICS_VERBOSE_LOGGING=true
+```
+Then check logs:
+```bash
+tail -f storage/logs/laravel.log | grep -i analytics
+```
+
+3. **Queue running?**:
 ```bash
 php artisan queue:work
 # Or temporarily disable:
 ANALYTICS_QUEUE_ENABLED=false
 ```
+
+### Duplicate tracking (3x same data)?
+
+**Solution:** Enable verbose logging to see duplicate detection:
+```env
+ANALYTICS_VERBOSE_LOGGING=true
+```
+
+Look for `Analytics duplicate request detected` in logs. If still occurring:
+
+1. **Check middleware registration** - ensure only registered once
+2. **Verify Redis cache** - deduplication requires working cache
+3. **Load balancer setup** - health checks might bypass deduplication
 
 ### Queue problems with Redis?
 
