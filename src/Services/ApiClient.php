@@ -16,17 +16,30 @@ class ApiClient
 
     public function send(array $data): bool
     {
+        $requestId = $data['request_id'] ?? uniqid('api_', true);
+        
+        Log::info('Analytics API request started', [
+            'request_id' => $requestId,
+            'api_url' => $this->config['api_url'] ?? 'not_set',
+            'has_api_key' => !empty($this->config['api_key']),
+            'data_size' => strlen(json_encode($data)),
+        ]);
+
         if (!$this->isConfigured()) {
-            if (config('app.debug')) {
-                Log::warning('Analytics API not configured. Skipping data send.', [
-                    'missing_api_url' => empty($this->config['api_url']),
-                    'missing_api_key' => empty($this->config['api_key']),
-                ]);
-            }
+            Log::warning('Analytics API not configured. Skipping data send.', [
+                'request_id' => $requestId,
+                'missing_api_url' => empty($this->config['api_url']),
+                'missing_api_key' => empty($this->config['api_key']),
+                'config_dump' => [
+                    'api_url' => $this->config['api_url'] ?? 'NULL',
+                    'api_key_length' => !empty($this->config['api_key']) ? strlen($this->config['api_key']) : 0,
+                ]
+            ]);
             return false;
         }
 
         try {
+            $startTime = microtime(true);
             $response = Http::timeout(10)
                 ->retry(3, 1000)
                 ->withHeaders([
@@ -36,29 +49,62 @@ class ApiClient
                 ])
                 ->post($this->config['api_url'], $data);
 
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+
             if ($response->successful()) {
+                Log::info('Analytics API request successful', [
+                    'request_id' => $requestId,
+                    'status' => $response->status(),
+                    'duration_ms' => $duration,
+                    'response_size' => strlen($response->body()),
+                ]);
                 return true;
             }
 
-            // Log non-successful responses in debug mode
-            if (config('app.debug')) {
-                Log::warning('Analytics API request failed', [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                    'data' => $data,
-                ]);
-            }
+            // Enhanced logging for production debugging
+            Log::error('Analytics API request failed', [
+                'request_id' => $requestId,
+                'status' => $response->status(),
+                'duration_ms' => $duration,
+                'response_body' => $response->body(),
+                'response_headers' => $response->headers(),
+                'request_url' => $this->config['api_url'],
+                'request_data' => $data,
+                'curl_error' => $response->transferStats?->getHandlerErrorData() ?? null,
+            ]);
 
             return false;
 
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Analytics API connection failed', [
+                'request_id' => $requestId,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'api_url' => $this->config['api_url'],
+                'curl_error' => $e->getPrevious()?->getMessage() ?? 'Unknown connection error',
+                'data' => $data,
+            ]);
+            return false;
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('Analytics API request exception', [
+                'request_id' => $requestId,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'response_status' => $e->response?->status() ?? null,
+                'response_body' => $e->response?->body() ?? null,
+                'api_url' => $this->config['api_url'],
+                'data' => $data,
+            ]);
+            return false;
         } catch (\Exception $e) {
-            if (config('app.debug')) {
-                Log::error('Analytics API request exception', [
-                    'message' => $e->getMessage(),
-                    'data' => $data,
-                ]);
-            }
-
+            Log::error('Analytics API unexpected exception', [
+                'request_id' => $requestId,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'api_url' => $this->config['api_url'],
+                'data' => $data,
+            ]);
             return false;
         }
     }

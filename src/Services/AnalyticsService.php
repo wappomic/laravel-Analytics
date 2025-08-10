@@ -93,7 +93,8 @@ class AnalyticsService
 
     protected function queueData(array $data): void
     {
-        SendAnalyticsJob::dispatch($data)
+        // Pass config to job to avoid config loading issues in queue context
+        SendAnalyticsJob::dispatch($data, $this->config)
             ->onConnection($this->config['queue_connection'] ?? 'redis')
             ->onQueue($this->config['queue_name'] ?? 'analytics');
     }
