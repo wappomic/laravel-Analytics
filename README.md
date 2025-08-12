@@ -40,7 +40,7 @@ ANALYTICS_QUEUE_CONNECTION=redis
 ANALYTICS_QUEUE_NAME=analytics
 ANALYTICS_SESSION_TRACKING_ENABLED=true
 ANALYTICS_SESSION_TTL_HOURS=24
-ANALYTICS_VERBOSE_LOGGING=false
+ANALYTICS_VERBOSE_LOGGING=0  # Use 1 for true, 0 for false
 ```
 
 That's it! 🎉 The package now automatically tracks all web requests.
@@ -515,10 +515,11 @@ Route::group(['middleware' => 'analytics.tracking'], function () {
 
 ### Verbose Logging
 
-For production debugging, enable detailed logging:
+For debugging, enable detailed logging:
 
 ```env
-ANALYTICS_VERBOSE_LOGGING=true
+ANALYTICS_VERBOSE_LOGGING=1
+APP_DEBUG=true  # Required - verbose logging only works when Laravel debug is enabled
 ```
 
 **Debug logs include:**
@@ -546,7 +547,8 @@ php artisan tinker
 
 2. **Enable verbose logging**:
 ```env
-ANALYTICS_VERBOSE_LOGGING=true
+ANALYTICS_VERBOSE_LOGGING=1
+APP_DEBUG=true
 ```
 Then check logs:
 ```bash
@@ -564,7 +566,8 @@ ANALYTICS_QUEUE_ENABLED=false
 
 **Solution:** Enable verbose logging to see duplicate detection:
 ```env
-ANALYTICS_VERBOSE_LOGGING=true
+ANALYTICS_VERBOSE_LOGGING=1
+APP_DEBUG=true
 ```
 
 Look for `Analytics duplicate request detected` in logs. If still occurring:

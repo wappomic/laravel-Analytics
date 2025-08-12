@@ -59,8 +59,11 @@ return [
     | When disabled, only ERROR and INFO level logs are generated.
     | Enable temporarily for debugging production issues.
     |
+    | IMPORTANT: Only works when Laravel's APP_DEBUG is also true.
+    | Use ANALYTICS_VERBOSE_LOGGING=1 for true, ANALYTICS_VERBOSE_LOGGING=0 for false
+    |
     */
-    'verbose_logging' => env('ANALYTICS_VERBOSE_LOGGING', false),
+    'verbose_logging' => filter_var(env('ANALYTICS_VERBOSE_LOGGING', false), FILTER_VALIDATE_BOOLEAN) && config('app.debug', false),
 
     /*
     |--------------------------------------------------------------------------
